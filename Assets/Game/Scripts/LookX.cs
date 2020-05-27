@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Look : MonoBehaviour
+public class LookX : MonoBehaviour
 {
     [SerializeField]
     private float _sensitivity = 1f;
@@ -18,10 +18,6 @@ public class Look : MonoBehaviour
         float mouseX = Input.GetAxis("Mouse X");
         Vector3 newRotation = transform.localEulerAngles;
         newRotation.y += mouseX * _sensitivity;
-
-        float mouseY = Input.GetAxis("Mouse Y");
-        newRotation.x -= mouseY * _sensitivity;
-
         transform.localEulerAngles = newRotation;
     
     }
