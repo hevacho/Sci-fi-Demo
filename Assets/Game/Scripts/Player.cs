@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class Player : MonoBehaviour
@@ -18,6 +20,15 @@ public class Player : MonoBehaviour
     [SerializeField]
     private AudioSource _audioWeapon;
 
+    [SerializeField]
+    private int currentAmmo;
+    private int maxAmmo = 250;
+
+    private bool isWeaponReloadRunning = false;
+    private UiManager _uiManager;
+
+    public bool hasCoin = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -25,6 +36,9 @@ public class Player : MonoBehaviour
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
         _particleSystem = gameObject.GetComponentInChildren<ParticleSystem>();
+        currentAmmo = maxAmmo;
+        _uiManager = GameObject.Find("Canvas").GetComponent<UiManager>();
+        _uiManager.UpdateAmmo(currentAmmo);
     }
 
     // Update is called once per frame
@@ -40,32 +54,65 @@ public class Player : MonoBehaviour
 
         if (Input.GetMouseButton(0))
         {
-            if (!_particleSystem.isPlaying)
+            if (currentAmmo > 0)
             {
-                _particleSystem.Play();
+                currentAmmo--;
+                _uiManager.UpdateAmmo(currentAmmo);
+                Shoot();
             }
-
-            if (!_audioWeapon.isPlaying)
+            else
             {
-                _audioWeapon.Play();
-            }
-
-            Ray rayOrigin = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
-
-            RaycastHit hitInfo;
-
-            if(Physics.Raycast(rayOrigin, out hitInfo))
-            {
-               Destroy(Instantiate(_hitMarkerPrefab, hitInfo.point, Quaternion.LookRotation(hitInfo.normal)), 3f);
+                StopShoot();
             }
         }
 
         if (Input.GetMouseButtonUp(0))
         {
-            _particleSystem.Stop();
-            _audioWeapon.Stop();
+            StopShoot();
         }
 
+        if (Input.GetKeyDown(KeyCode.R) && !isWeaponReloadRunning)
+        {   
+            StartCoroutine(ReloadWeapon());
+        }
+
+    }
+
+    IEnumerator ReloadWeapon()
+    {
+        isWeaponReloadRunning = true;
+        yield return new WaitForSeconds(1.5f);
+        currentAmmo = maxAmmo;
+        _uiManager.UpdateAmmo(currentAmmo);
+        isWeaponReloadRunning = false;
+    }
+
+    private void StopShoot()
+    {
+        _particleSystem.Stop();
+        _audioWeapon.Stop();
+    }
+
+    private void Shoot()
+    {
+        if (!_particleSystem.isPlaying)
+        {
+            _particleSystem.Play();
+        }
+
+        if (!_audioWeapon.isPlaying)
+        {
+            _audioWeapon.Play();
+        }
+
+        Ray rayOrigin = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+
+        RaycastHit hitInfo;
+
+        if (Physics.Raycast(rayOrigin, out hitInfo))
+        {
+            Destroy(Instantiate(_hitMarkerPrefab, hitInfo.point, Quaternion.LookRotation(hitInfo.normal)), 3f);
+        }
     }
 
     void CalculateMovement()
