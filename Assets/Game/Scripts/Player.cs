@@ -29,6 +29,9 @@ public class Player : MonoBehaviour
 
     public bool hasCoin = false;
 
+    [SerializeField]
+    private GameObject weapon;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -39,6 +42,7 @@ public class Player : MonoBehaviour
         currentAmmo = maxAmmo;
         _uiManager = GameObject.Find("Canvas").GetComponent<UiManager>();
         _uiManager.UpdateAmmo(currentAmmo);
+        weapon.SetActive(false);
     }
 
     // Update is called once per frame
@@ -52,7 +56,7 @@ public class Player : MonoBehaviour
             Cursor.lockState = CursorLockMode.None;
         }
 
-        if (Input.GetMouseButton(0))
+        if (weapon.activeSelf && Input.GetMouseButton(0))
         {
             if (currentAmmo > 0)
             {
@@ -95,12 +99,12 @@ public class Player : MonoBehaviour
 
     private void Shoot()
     {
-        if (!_particleSystem.isPlaying)
+        if (_particleSystem!=null && !_particleSystem.isPlaying)
         {
             _particleSystem.Play();
         }
 
-        if (!_audioWeapon.isPlaying)
+        if (_audioWeapon!=null && _audioWeapon.isActiveAndEnabled && !_audioWeapon.isPlaying)
         {
             _audioWeapon.Play();
         }
@@ -112,6 +116,13 @@ public class Player : MonoBehaviour
         if (Physics.Raycast(rayOrigin, out hitInfo))
         {
             Destroy(Instantiate(_hitMarkerPrefab, hitInfo.point, Quaternion.LookRotation(hitInfo.normal)), 3f);
+
+            Destructable destructable = hitInfo.transform.GetComponent<Destructable>();
+            if (destructable != null)
+            {
+                destructable.DestroyComponent();
+            }
+          
         }
     }
 
@@ -129,5 +140,10 @@ public class Player : MonoBehaviour
         //gravity always in worlSpace coordenates
         velocity.y = _gravity;
         _controller.Move(velocity * Time.deltaTime);
+    }
+
+    public void enableWeapon()
+    {
+        weapon.SetActive(true);
     }
 }
